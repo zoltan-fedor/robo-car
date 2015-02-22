@@ -124,6 +124,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
   nodes/drive_control_publisher.py
+  nodes/drive_control_decay_publisher.py
   nodes/drive_control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
