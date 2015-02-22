@@ -14,6 +14,8 @@ speed_max_angle_reverse = 0 # maximum angle allowed in reverse (which is actuall
 speed_max_angle_forward = 180 # maximum angle allowed in forward
 speed_decay_angle = 1 # how much we decrease the angle when there is a decay request
 speed_change_angle = 5 # when we receive a request to change the speed, this is the angle change we will do
+speed_direction_change_delay = 2 # in sec - delay enforced between changing direction (forward-backward)
+last_stop_timestamp = 0.0 # the last time we have reached the zero speed from a non-zero speed (used with the speed_direction_change_delay)
 
 direction_natural = 90 # this is the natural (straight ahead) position of the wheel in angles
 direction_current_angle = direction_natural # this variable will carry the actual direction angle at any time
@@ -111,13 +113,44 @@ def change_direction(angle_change):
 # sets the speed to the angle requested
 def set_speed_angle(angle):
     global speed_current_angle # so we can change this global variable in this function
+    global last_stop_timestamp # so we can set this global variable in this function
+    movement_allowed = 'yes'
+    
+    #rospy.loginfo("Value of speed_current_angle is %i", speed_current_angle)
+    #rospy.loginfo("Value of new angle to be set is %i", angle)
     
     if(angle < speed_max_angle_reverse or angle > speed_max_angle_forward):
         rospy.loginfo("Out of range angle was requested for speed: %i", angle)
     else:
-        # TODO write a code to set the speed angle
-        speed_current_angle = angle # overwrite the global variable with the new value
-        rospy.loginfo("Set the speed to angle %i", angle)
+        # the old (current) speed is NOT in the zero range but the new speed is in the zero range, then we need to set the last_stop_timestamp,
+        # which later we will use to determine whether the speed_direction_change_delay has passed yet
+        # but we only set this if hasn't been set already
+        if((speed_current_angle <= speed_min_angle_reverse or speed_current_angle >= speed_min_angle_forward)
+        and angle > speed_min_angle_reverse and angle < speed_min_angle_forward
+        and last_stop_timestamp == 0.0):
+            last_stop_timestamp = rospy.get_time() # populate the last_stop_timestamp with the unix timestamp (example: 1424637131.834309)
+            rospy.loginfo("Last stop timestamp set %f", last_stop_timestamp)
+            movement_allowed = 'yes'
+        else:         
+            # the old (current) speed is in the zero range but the new speed is NOT in the zero range, then we need to check the last_stop_timestamp,
+            # whether the speed_direction_change_delay has passed already
+            if(speed_current_angle >= speed_min_angle_reverse and speed_current_angle <= speed_min_angle_forward
+            and (angle < speed_min_angle_reverse or angle > speed_min_angle_forward )):
+                # if the speed_direction_change_delay already passed or there wasn one then we can start moving
+                if(rospy.get_time() > (last_stop_timestamp + speed_direction_change_delay)):
+                    movement_allowed = 'yes'
+                    last_stop_timestamp = 0.0
+                else:
+                    movement_allowed = 'no'
+                    rospy.loginfo("No movement allowed, because the speed_direction_change_delay hasn't passed yet!")
+            else:
+                movement_allowed = 'yes'
+                last_stop_timestamp = 0.0
+        
+        if(movement_allowed == 'yes'):
+            # TODO write a code to set the speed angle
+            speed_current_angle = angle # overwrite the global variable with the new value
+            rospy.loginfo("Set the speed to anglee %i", angle)
     
 # sets the direction to the angle requested
 def set_direction_angle(angle):
