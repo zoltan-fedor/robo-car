@@ -3,9 +3,14 @@ import rospy
 from std_msgs.msg import String
 import time
 from pyfirmata import Arduino
-#board = Arduino('/dev/ttyACM99', baudrate=57600)
-# using pyfirmata: https://github.com/tino/pyFirmata
 
+on_hardware = False # whether we are running this node on the actual car (so it can access the IO board)
+wheelpin = 3 # to which pin on the IO sheld the whee pin got connected
+drivepin = 5 # to which pin on the IO shield the drive cable got connected
+if on_hardware == True: # running on hardware -- we need to set the board connection
+    board = Arduino('/dev/ttyACM99', baudrate=57600)
+    board.servo_config(wheelpin, min_pulse=1, max_pulse=20, angle=90) # set initial direction to straight forward
+    board.servo_config(drivepin, min_pulse=1, max_pulse=20, angle=90) # set initial speed to natural
 
 speed_current_angle = 90 # this variable will carry the actual speed at any time and will be used to determine direction of change (in case of decay or full stop)
 speed_min_angle_reverse = 75 # this is the angle below which the car start moving in reverse
@@ -33,6 +38,9 @@ def decay_callback(data):
     speed_instructions(data.data)
     
 def listener():
+    #board = Arduino('/dev/ttyACM99', baudrate=57600)
+    # using pyfirmata: https://github.com/tino/pyFirmata
+    
     # In ROS, nodes are uniquely named. If two nodes with the same
     # node are launched, the previous one is kicked off. The
     # anonymous=True flag means that rospy will choose a unique
@@ -40,12 +48,17 @@ def listener():
     # run simultaneously.
     rospy.init_node('drive_control', anonymous=True)
     
+    if on_hardware == True:
+        rospy.loginfo("Running on hardware")
+    else:
+        rospy.loginfo("Not running on hardware (in simulation")
+    
     ####
     # initialization
     # before starting we need to set the car to idle and wheels facing forward
     set_speed_angle(speed_current_angle) # sets the speed to the current angle, which has a default of 90 at start
     set_direction_angle(direction_current_angle) # sets the direction to the current angle, which has a default of 90 at start
-    rospy.loginfo("Started")
+    rospy.loginfo("Started.")
     
     ####
     # subscribe to the topics
@@ -148,7 +161,8 @@ def set_speed_angle(angle):
                 last_stop_timestamp = 0.0
         
         if(movement_allowed == 'yes'):
-            # TODO write a code to set the speed angle
+            if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
+                board.digital[drivepin].write(angle)
             speed_current_angle = angle # overwrite the global variable with the new value
             rospy.loginfo("Set the speed to anglee %i", angle)
     
@@ -159,7 +173,8 @@ def set_direction_angle(angle):
     if(angle < direction_max_angle_left or angle > direction_max_angle_right):
         rospy.loginfo("Out of range angle was requested for direction: %i", angle)
     else:
-        # TODO write a code to set the direction angle
+        if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
+            board.digital[wheelpin].write(angle)
         direction_current_angle = angle # overwrite the global variable with the new value
         rospy.loginfo("Set the direction to angle %i", angle)
     
