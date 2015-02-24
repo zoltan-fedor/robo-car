@@ -5,8 +5,8 @@ import time
 from pyfirmata import Arduino
 
 on_hardware = False # whether we are running this node on the actual car (so it can access the IO board)
-wheelpin = 3 # to which pin on the IO sheld the whee pin got connected
-drivepin = 5 # to which pin on the IO shield the drive cable got connected
+wheelpin = 5 # to which pin on the IO sheld the whee pin got connected
+drivepin = 3 # to which pin on the IO shield the drive cable got connected
 if on_hardware == True: # running on hardware -- we need to set the board connection
     board = Arduino('/dev/ttyACM99', baudrate=57600)
     board.servo_config(wheelpin, min_pulse=1, max_pulse=20, angle=90) # set initial direction to straight forward
@@ -164,7 +164,7 @@ def set_speed_angle(angle):
             if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
                 board.digital[drivepin].write(angle)
             speed_current_angle = angle # overwrite the global variable with the new value
-            rospy.loginfo("Set the speed to anglee %i", angle)
+            rospy.loginfo("Set the speed to angle %i", angle)
     
 # sets the direction to the angle requested
 def set_direction_angle(angle):
