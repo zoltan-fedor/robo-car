@@ -29,13 +29,13 @@ direction_max_angle_right = 150 # maximum angle allowed when setting the directi
 direction_decay_angle = 2 # how much we decrease the angle when there is a decay request
 direction_change_angle = 3 # when we receive a request to change the direction, this is the angle change we will do
 
-def callback(data):
+def message_callback(data):
     rospy.loginfo(rospy.get_caller_id() + "I heard speed/direction message %s", data.data)
-    speed_instructions(data.data)
+    speed_direction_instructions(data.data)
     
 def decay_callback(data):
     rospy.loginfo(rospy.get_caller_id() + "I heard decay message %s", data.data)
-    speed_instructions(data.data)
+    speed_direction_instructions(data.data)
     
 def listener():
     #board = Arduino('/dev/ttyACM99', baudrate=57600)
@@ -62,14 +62,14 @@ def listener():
     
     ####
     # subscribe to the topics
-    rospy.Subscriber("drive_control_publish", String, callback)
+    rospy.Subscriber("drive_control_publish", String, message_callback)
     rospy.Subscriber("drive_control_decay_publish", String, decay_callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
   
-# this function will set the speed of the car, based on the received instruction
-def speed_instructions(instruction):
+# this function will set the speed and direction of the car, based on the received instruction
+def speed_direction_instructions(instruction):
     global speed_current_angle # so we can change this global variable in this function
     
     if(instruction == 'decay'): # this was a decay request
@@ -182,23 +182,3 @@ def set_direction_angle(angle):
 if __name__ == '__main__':
     listener()
     
-# start an iterator thread so
-# serial buffer doesn't overflow
-#iter8 = pyfirmata.util.Iterator(board)
-#iter8.start()
-
-"""
-drivepin=6
-board.servo_config(drivepin, min_pulse=15, max_pulse=25, angle=0) # set initial direction to straight forward
-
-time.sleep(3)
-board.digital[drivepin].write(0)
-print('set 0')
-time.sleep(3)
-board.digital[drivepin].write(70)
-print('set 20')
-time.sleep(1)
-board.digital[drivepin].write(0)
-print('set 0')
-time.sleep(2)
-board.exit() # this will exit all servos"""
