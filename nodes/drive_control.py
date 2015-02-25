@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import String
+from std_msgs.msg import UInt16
 import time
 from pyfirmata import Arduino
 
@@ -29,6 +30,11 @@ direction_max_angle_right = 150 # maximum angle allowed when setting the directi
 direction_decay_angle = 2 # how much we decrease the angle when there is a decay request
 direction_change_angle = 3 # when we receive a request to change the direction, this is the angle change we will do
 
+####
+# create the publishers to which this node will publish data to
+pub_speed_angle = rospy.Publisher('drive_control_speed_angle', UInt16, queue_size=10)
+pub_direction_angle = rospy.Publisher('drive_control_direction_angle', UInt16, queue_size=10)
+
 def message_callback(data):
     rospy.loginfo(rospy.get_caller_id() + "I heard speed/direction message %s", data.data)
     speed_direction_instructions(data.data)
@@ -38,8 +44,7 @@ def decay_callback(data):
     speed_direction_instructions(data.data)
     
 def listener():
-    #board = Arduino('/dev/ttyACM99', baudrate=57600)
-    # using pyfirmata: https://github.com/tino/pyFirmata
+    global pub_drive_angle
     
     # In ROS, nodes are uniquely named. If two nodes with the same
     # node are launched, the previous one is kicked off. The
@@ -115,6 +120,7 @@ def speed_direction_instructions(instruction):
 def change_speed(angle_change):
     new_angle = speed_current_angle + angle_change
     set_speed_angle(new_angle)
+
     rospy.loginfo("Changed the speed by angle %i", angle_change)
  
 # this function is called with the angle change request and will change the current angle with the amount requested
@@ -164,6 +170,7 @@ def set_speed_angle(angle):
             if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
                 board.digital[drivepin].write(angle)
             speed_current_angle = angle # overwrite the global variable with the new value
+            pub_speed_angle.publish(angle) # publish the angle we set to a topic so others can see it
             rospy.loginfo("Set the speed to angle %i", angle)
     
 # sets the direction to the angle requested
@@ -176,6 +183,7 @@ def set_direction_angle(angle):
         if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
             board.digital[wheelpin].write(angle)
         direction_current_angle = angle # overwrite the global variable with the new value
+        pub_direction_angle.publish(angle) # publish the angle we set to a topic so others can see it
         rospy.loginfo("Set the direction to angle %i", angle)
     
  
