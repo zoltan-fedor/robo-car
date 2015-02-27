@@ -5,30 +5,32 @@ from std_msgs.msg import UInt16
 import time
 from pyfirmata import Arduino
 
-on_hardware = False # whether we are running this node on the actual car (so it can access the IO board)
+on_hardware = True # whether we are running this node on the actual car (so it can access the IO board)
 wheelpin = 5 # to which pin on the IO sheld the whee pin got connected
 drivepin = 3 # to which pin on the IO shield the drive cable got connected
 if on_hardware == True: # running on hardware -- we need to set the board connection
     board = Arduino('/dev/ttyACM99', baudrate=57600)
-    board.servo_config(wheelpin, min_pulse=1, max_pulse=20, angle=90) # set initial direction to straight forward
+    board.servo_config(wheelpin, min_pulse=1, max_pulse=100, angle=90) # set initial direction to straight forward
     board.servo_config(drivepin, min_pulse=1, max_pulse=20, angle=90) # set initial speed to natural
 
-speed_current_angle = 90 # this variable will carry the actual speed at any time and will be used to determine direction of change (in case of decay or full stop)
+speed_natural = 90
+speed_current_angle = speed_natural # this variable will carry the actual speed at any time and will be used to determine direction of change (in case of decay or full stop)
 speed_min_angle_reverse = 75 # this is the angle below which the car start moving in reverse
-speed_min_angle_forward = 105 # this is the angle above which the car start moving forward
-speed_max_angle_reverse = 0 # maximum angle allowed in reverse (which is actually a minimum mathematically, as the angle goes 0-90)
-speed_max_angle_forward = 180 # maximum angle allowed in forward
+speed_min_angle_forward = 107 # this is the angle above which the car start moving forward
+speed_max_angle_reverse = 60 # maximum angle allowed in reverse (which is actually a minimum mathematically, as the angle goes 0-90)
+speed_max_angle_forward = 120 # maximum angle allowed in forward
 speed_decay_angle = 1 # how much we decrease the angle when there is a decay request
-speed_change_angle = 5 # when we receive a request to change the speed, this is the angle change we will do
+speed_change_angle = 1 # when we receive a request to change the speed, this is the angle change we will do
+speed_change_angle_decrease = 2 # this is the speed slowdown (breaking)
 speed_direction_change_delay = 2 # in sec - delay enforced between changing direction (forward-backward)
 last_stop_timestamp = 0.0 # the last time we have reached the zero speed from a non-zero speed (used with the speed_direction_change_delay)
 
 direction_natural = 90 # this is the natural (straight ahead) position of the wheel in angles
 direction_current_angle = direction_natural # this variable will carry the actual direction angle at any time
 direction_max_angle_left = 30 # maximum angle allowed when setting the direction to the left (which is actually a minimum mathematically, as the angle goes 0-90)
-direction_max_angle_right = 150 # maximum angle allowed when setting the direction to the right
+direction_max_angle_right = 145 # maximum angle allowed when setting the direction to the right
 direction_decay_angle = 2 # how much we decrease the angle when there is a decay request
-direction_change_angle = 3 # when we receive a request to change the direction, this is the angle change we will do
+direction_change_angle = 5 # when we receive a request to change the direction, this is the angle change we will do
 
 ####
 # create the publishers to which this node will publish data to
@@ -96,7 +98,7 @@ def speed_direction_instructions(instruction):
             speed_current_angle = speed_min_angle_forward
             
         if(speed_current_angle <= speed_min_angle_reverse): # we are currently moving in reverse
-            change_speed(-1*speed_change_angle)
+            change_speed(speed_change_angle_decrease)
         if(speed_current_angle >= speed_min_angle_forward): # we are currently moving forward
             change_speed(speed_change_angle)
     
@@ -105,15 +107,15 @@ def speed_direction_instructions(instruction):
             speed_current_angle = speed_min_angle_reverse
             
         if(speed_current_angle <= speed_min_angle_reverse): # we are currently moving in reverse
-            change_speed(speed_change_angle)
-        if(speed_current_angle >= speed_min_angle_forward): # we are currently moving forward
             change_speed(-1*speed_change_angle)
+        if(speed_current_angle >= speed_min_angle_forward): # we are currently moving forward
+            change_speed(-1*speed_change_angle_decrease)
     
     if(instruction == 'L'): # this is a turn left request (~left button pressed)
-        change_direction(-1*direction_change_angle)
+        change_direction(direction_change_angle)
     
     if(instruction == 'R'): # this is a turn right request (~right button pressed)
-        change_direction(direction_change_angle)
+        change_direction(-1*direction_change_angle)
 
  
 # this function is called with the angle change request and will change the current angle with the amount requested
@@ -161,12 +163,16 @@ def set_speed_angle(angle):
                     last_stop_timestamp = 0.0
                 else:
                     movement_allowed = 'no'
+                    if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
+                        board.digital[drivepin].write(speed_natural) # we set the angle to the middle of the neutral zone, so we don't send power to the motors
                     rospy.loginfo("No movement allowed, because the speed_direction_change_delay hasn't passed yet!")
             else:
                 movement_allowed = 'yes'
                 last_stop_timestamp = 0.0
         
         if(movement_allowed == 'yes'):
+            if(angle > speed_min_angle_reverse and angle < speed_min_angle_forward): # if the request came to set the angle within the neutral range, then we set it to 90, so we don't send power to the motors
+                angle = speed_natural
             if on_hardware == True: # running on hardware -- we need to actually write this value to the PWM
                 board.digital[drivepin].write(angle)
             speed_current_angle = angle # overwrite the global variable with the new value
