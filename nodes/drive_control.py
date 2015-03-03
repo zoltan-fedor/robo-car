@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import String
-from std_msgs.msg import UInt16
+#from std_msgs.msg import UInt16
+from std_msgs.msg import Int32
 import time
 from pyfirmata import Arduino
 
-on_hardware = True # whether we are running this node on the actual car (so it can access the IO board)
+on_hardware = False # whether we are running this node on the actual car (so it can access the IO board)
 wheelpin = 5 # to which pin on the IO sheld the whee pin got connected
 drivepin = 3 # to which pin on the IO shield the drive cable got connected
 if on_hardware == True: # running on hardware -- we need to set the board connection
@@ -34,8 +35,8 @@ direction_change_angle = 5 # when we receive a request to change the direction, 
 
 ####
 # create the publishers to which this node will publish data to
-pub_speed_angle = rospy.Publisher('drive_control_speed_angle', UInt16, queue_size=10)
-pub_direction_angle = rospy.Publisher('drive_control_direction_angle', UInt16, queue_size=10)
+pub_speed_angle = rospy.Publisher('drive_control_speed_angle', Int32, queue_size=10)
+pub_direction_angle = rospy.Publisher('drive_control_direction_angle', Int32, queue_size=10)
 
 def message_callback(data):
     rospy.loginfo(rospy.get_caller_id() + "I heard speed/direction message %s", data.data)
