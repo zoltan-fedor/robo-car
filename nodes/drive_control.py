@@ -6,7 +6,7 @@ from std_msgs.msg import Int32
 import time
 from pyfirmata import Arduino
 
-on_hardware = False # whether we are running this node on the actual car (so it can access the IO board)
+on_hardware = True # whether we are running this node on the actual car (so it can access the IO board)
 wheelpin = 5 # to which pin on the IO sheld the whee pin got connected
 drivepin = 3 # to which pin on the IO shield the drive cable got connected
 if on_hardware == True: # running on hardware -- we need to set the board connection
@@ -31,7 +31,7 @@ direction_current_angle = direction_natural # this variable will carry the actua
 direction_max_angle_left = 30 # maximum angle allowed when setting the direction to the left (which is actually a minimum mathematically, as the angle goes 0-90)
 direction_max_angle_right = 145 # maximum angle allowed when setting the direction to the right
 direction_decay_angle = 2 # how much we decrease the angle when there is a decay request
-direction_change_angle = 5 # when we receive a request to change the direction, this is the angle change we will do
+direction_change_angle = 7 # when we receive a request to change the direction, this is the angle change we will do
 
 ####
 # create the publishers to which this node will publish data to
