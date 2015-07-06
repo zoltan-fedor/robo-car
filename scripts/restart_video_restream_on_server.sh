@@ -8,7 +8,7 @@ echo "Restarting vlc restreaming on $SERVER"
 ssh $USER@$SERVER "echo \$HOME"
 
 # find and kill all instances of vlc on the server
-ssh $USER@$SERVER "kill \$(ps aux | grep '[v]lc' | awk '{print $2}')"
+ssh $USER@$SERVER "kill \$(ps aux | grep '[v]lc' | awk '{print \$2}')"
 
 # get the IP address of the robo-car
 IP_ADDRESS="$(/sbin/ifconfig wlan2 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
