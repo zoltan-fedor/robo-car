@@ -1,0 +1,5 @@
+<launch>
+  <node name="drive_control" pkg="robo_car" type="drive_control.py" />
+  <node name="drive_control_decay_publisher" pkg="robo_car" type="drive_control_decay_publisher.py" />
+  <node name="drive_control_socket_listener" pkg="robo_car" type="drive_control_socket_listener.py" />
+</launch>
