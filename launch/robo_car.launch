@@ -1,5 +1,18 @@
 <launch>
+
+  <!-- Start the main drive_control module, which will turn instructions into hardware commands to drive the engines -->
   <node name="drive_control" pkg="robo_car" type="drive_control.py" />
+  
+  <!-- Start the decay publisher, which will publish commands to decay the current speed and wheel direction -->
   <node name="drive_control_decay_publisher" pkg="robo_car" type="drive_control_decay_publisher.py" />
+  
+  <!-- Start the module which will open a socket and listen to instructions arriving and republish them to ROS -->
   <node name="drive_control_socket_listener" pkg="robo_car" type="drive_control_socket_listener.py" />
+  
+  
+  <!-- Start the streaming of the camera from the robo-car -->
+  <node name="camera_stream" pkg="robo_car" type="restart_video_stream.sh" />
+  
+  <!-- Start the re-streaming of the camera feed on the server -->
+  <node name="camera_restream" pkg="robo_car" type="restart_video_restream_on_server.sh" />
 </launch>
