@@ -19,5 +19,5 @@ IP_ADDRESS_SERVER="$(host $SERVER | awk '/has address/ { print $4 }')"
 echo "Current IP Address of the server: $IP_ADDRESS_SERVER"
 
 # start the vlc restream on the server
-ssh $USER@$SERVER "cvlc http://$IP_ADDRESS:8080 --no-audio --sout '#transcode{vcodec=MJPG,venc=ffmpeg{strict=1}}:standard{access=http{mime=multipart/x-mixed-replace;boundary=--7b3cc56e5f51db803f790dad720ed50a},mux=mpjpeg,dst='$IP_ADDRESS_SERVER':8080}' --network-caching=100 "
+ssh $USER@$SERVER "cvlc http://$IP_ADDRESS:8080 --no-audio --sout '#transcode{vcodec=MJPG,venc=ffmpeg{strict=1},fps=15}:standard{access=http{mime=multipart/x-mixed-replace;boundary=--7b3cc56e5f51db803f790dad720ed50a},mux=mpjpeg,dst='$IP_ADDRESS_SERVER':8080}' --network-caching=100 "
 
