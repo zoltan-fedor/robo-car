@@ -18,9 +18,9 @@ speed_natural = 90
 speed_current_angle = speed_natural # this variable will carry the actual speed at any time and will be used to determine direction of change (in case of decay or full stop)
 speed_min_angle_reverse = 75 # this is the angle below which the car start moving in reverse
 speed_min_angle_forward = 107 # this is the angle above which the car start moving forward
-speed_max_angle_reverse = 60 # maximum angle allowed in reverse (which is actually a minimum mathematically, as the angle goes 0-90)
-speed_max_angle_forward = 120 # maximum angle allowed in forward
-speed_decay_angle = 1 # how much we decrease the angle when there is a decay request
+speed_max_angle_reverse = 65 # maximum angle allowed in reverse (which is actually a minimum mathematically, as the angle goes 0-90)
+speed_max_angle_forward = 115 # maximum angle allowed in forward
+speed_decay_angle = 2 # how much we decrease the angle when there is a decay request
 speed_change_angle = 1 # when we receive a request to change the speed, this is the angle change we will do
 speed_change_angle_decrease = 2 # this is the speed slowdown (breaking)
 speed_direction_change_delay = 2 # in sec - delay enforced between changing direction (forward-backward)
@@ -30,7 +30,7 @@ direction_natural = 90 # this is the natural (straight ahead) position of the wh
 direction_current_angle = direction_natural # this variable will carry the actual direction angle at any time
 direction_max_angle_left = 30 # maximum angle allowed when setting the direction to the left (which is actually a minimum mathematically, as the angle goes 0-90)
 direction_max_angle_right = 145 # maximum angle allowed when setting the direction to the right
-direction_decay_angle = 2 # how much we decrease the angle when there is a decay request
+direction_decay_angle = 1 # how much we decrease the angle when there is a decay request
 direction_change_angle = 7 # when we receive a request to change the direction, this is the angle change we will do
 
 ####
